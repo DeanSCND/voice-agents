@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 15 - Primary database
+  postgres:
+    image: postgres:15-alpine
+    container_name: archer-postgres
+    environment:
+      POSTGRES_DB: archer_dev
+      POSTGRES_USER: archer
+      POSTGRES_PASSWORD: archer_dev_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U archer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - archer-network
+
+  # Redis 7 - Session cache and Socket.IO coordination
+  redis:
+    image: redis:7-alpine
+    container_name: archer-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - archer-network
+
+  # Backend - Python/FastAPI service
+  backend:
+    build:
+      context: ./archer/backend
+      dockerfile: Dockerfile
+    container_name: archer-backend
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://archer:archer_dev_pass@postgres:5432/archer_dev
+      - REDIS_URL=redis://redis:6379
+      - ENVIRONMENT=development
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./archer/backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - archer-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  archer-network:
+    driver: bridge
