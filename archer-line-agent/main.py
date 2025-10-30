@@ -4,11 +4,10 @@ Archer Voice Agent - Simple Conversational MVP
 Minimal Line SDK implementation to test basic conversation flow.
 No tools, no database, no API calls - just conversation.
 """
-import os
 from dotenv import load_dotenv
 
 from line import Bridge, CallRequest, VoiceAgentApp, VoiceAgentSystem
-from line.nodes import TalkingNode
+from line.nodes.reasoning import ReasoningNode
 from line.events import UserStartedSpeaking, UserStoppedSpeaking, UserTranscriptionReceived
 
 # Load environment variables
@@ -38,8 +37,8 @@ You: "I'd be happy to help with that. This is currently a test call to verify ou
 async def handle_new_call(system: VoiceAgentSystem, call_request: CallRequest):
     """Handle incoming call - simple conversation."""
 
-    # Create conversation node
-    conversation_node = TalkingNode(
+    # Create conversation node using ReasoningNode
+    conversation_node = ReasoningNode(
         system_prompt=SYSTEM_PROMPT,
     )
 
