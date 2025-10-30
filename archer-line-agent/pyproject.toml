@@ -1,20 +1,21 @@
 [project]
 name = "archer-line-agent"
 version = "0.1.0"
-description = ""
-authors = [
-    {name = "DeanSCND-Symend",email = "dskelton@symend.com"}
-]
-readme = "README.md"
-requires-python = ">=3.11"
+description = "Simple conversational voice agent for Archer banking"
+requires-python = ">=3.10"
 dependencies = [
-    "cartesia-line>=0.1.3",
-    "python-dotenv>=1.2.1",
-    "fastapi>=0.104.0",
-    "uvicorn>=0.24.0"
+    "cartesia-line",
+    "python-dotenv>=1.0.0",
+    "fastapi",
+    "uvicorn==0.35.0",
 ]
-
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
